@@ -114,7 +114,11 @@
           <span class="sign-desc">签名：</span>
           <img class="sign-img" :src="signImg" alt="" />
         </div>
-        <div class="loca">家庭住址：</div>
+        <div class="loca">
+          家庭住址：<span v-if="voucherList[4].answerContentResponse.content">{{
+            voucherList[4].answerContentResponse.content
+          }}</span>
+        </div>
       </div>
     </div>
     <div class="button" @click="handleSubmit">
@@ -158,7 +162,7 @@ export default {
         maxWriteWidth: 2,
         bgColor: "#fff"
       },
-      voucherList: [
+      testList: [
         {
           answerChooseResponses: null,
           answerContentResponse: { content: "" },
@@ -232,6 +236,8 @@ export default {
           type: "02"
         }
       ],
+      questionId: 16,
+      voucherList: [],
       signImg: "",
       signDate: "",
       showSign: false
@@ -265,7 +271,7 @@ export default {
      */
     async handleSubmit() {
       console.log(this.voucherList);
-      const { voucherList, questionId, userPieceworkId } = this;
+      const { voucherList, questionId } = this;
       console.log(voucherList);
       /**
        * 提交之前处理数据
@@ -316,16 +322,18 @@ export default {
       } else {
         console.log({
           voucherList: list,
-          questionId: Number(questionId),
-          userPieceworkId: Number(userPieceworkId)
+          questionId: Number(questionId)
         });
-        const submitRes = await Voucher.saveVoucherList({
-          voucherList: list,
-          questionId: Number(questionId),
-          userPieceworkId: Number(userPieceworkId)
-        });
-        if (submitRes.resultCode === "00") {
-          console.log("true");
+        try {
+          const submitRes = await Voucher.saveVoucherList({
+            voucherList: list,
+            questionId: Number(questionId)
+          });
+          if (submitRes.resultCode === "00") {
+            alert("提交成功");
+          }
+        } catch (err) {
+          alert("提交失败，请重试");
         }
       }
     },
@@ -351,6 +359,11 @@ export default {
       const base64 = img.split(",")[1];
       const uploadRes = await Common.uploadImg(base64);
       this.signImg = uploadRes.imgUrl;
+      const { voucherList } = this;
+      /* 保存到问卷列表中 */
+      voucherList[voucherList.length - 1].answerContentResponse.content =
+        uploadRes.imgUrl;
+      this.voucherList = voucherList;
       this.handleHideSign();
       this.canvasClear();
     },
@@ -359,26 +372,33 @@ export default {
     },
     handleHideSign() {
       this.showSign = false;
+    },
+    async getVoucherList() {
+      const { questionId } = this;
+      try {
+        const res = await Voucher.getVoucherList({
+          questionId
+        });
+        const { voucherList } = res;
+        for (let i = 0; i < voucherList.length; i++) {
+          if (!voucherList[i].answerContentResponse) {
+            this.$set(voucherList[i], "answerContentResponse", {});
+            voucherList[i].answerContentResponse.content = "";
+          }
+          if (voucherList[i].type === "00") {
+            voucherList[i].activeAnswerContent = "";
+          }
+        }
+        this.voucherList = voucherList;
+        console.log(res);
+      } catch (err) {
+        alert("请求失败，请刷新页面");
+      }
     }
   },
   async created() {
-    const res = await Voucher.getVoucherList({
-      questionId: 16
-    });
-
-    const { voucherList } = res;
-    for (let i = 0; i < voucherList.length; i++) {
-      if (!voucherList[i].answerContentResponse) {
-        this.$set(voucherList[i], "answerContentResponse", {});
-        voucherList[i].answerContentResponse.content = "";
-      }
-      if (voucherList[i].type === "00") {
-        voucherList[i].activeAnswerContent = "";
-      }
-    }
-    this.voucherList = voucherList;
-    console.log(res);
     this.getSignDate();
+    this.getVoucherList();
   }
 };
 </script>
@@ -494,6 +514,7 @@ export default {
   color: #333;
 }
 .input-content input {
+  color: #333;
   border: 0;
   outline: none;
   margin-left: 10px;
@@ -540,6 +561,7 @@ export default {
 
 /* 承诺样式 */
 .info-list {
+  padding: 0 4px;
   font-size: 14px;
 }
 .message .info-list {

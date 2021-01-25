@@ -3,8 +3,8 @@ import CryptoJS from "crypto-js";
 import axios from "axios";
 import qs from "qs";
 
-// const BASE_URL = "/api";
-const BASE_URL = "https://rob.megameta.cn";
+const BASE_URL = "/api";
+// const BASE_URL = "https://rob.megameta.cn";
 /**
  * 定义加密类
  */

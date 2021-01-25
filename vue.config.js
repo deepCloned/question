@@ -15,5 +15,6 @@ module.exports = {
   configureWebpack: config => {
     //调试JS
     config.devtool = "source-map";
-  }
+  },
+  publicPath: "./"
 };
