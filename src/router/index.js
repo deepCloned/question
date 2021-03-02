@@ -30,6 +30,12 @@ const routes = [
     name: "Compress",
     component: () =>
       import(/* webpackChunkName: "Compress" */ "../views/Compress.vue")
+  },
+  {
+    path: "/chart",
+    name: "Chart",
+    component: () =>
+      import(/* webpackChunkName: "Chart" */ "../views/Chart.vue")
   }
 ];
 
